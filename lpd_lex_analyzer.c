@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <string.h>
 #include <ctype.h>
 #include <wctype.h>
@@ -759,12 +758,24 @@ int main(int argc, char *argv[])
   char *fileName = argv[1];
   int line = 1;
   wchar_t *buffer = readFile(fileName);
-  TOKEN tk;
-  do
+  TOKEN *tokens;
+  int tokenCounter = 0;
+
+  tokens = malloc(sizeof(TOKEN) * 1);
+  while (1)
   {
-    tk = scanner(&buffer, &line);
-    printf("Line:%3d | %-30s | %5Ls\n", tk.line, tokenToStr[tk.type], tk.value);
-  } while ((tk.type != ERROR) && (tk.type != EOS));
+    TOKEN currentToken = scanner(&buffer, &line);
+    tokenCounter++;
+    tokens = realloc(tokens, tokenCounter * sizeof(TOKEN));
+    tokens[tokenCounter - 1] = currentToken;
+    if ((currentToken.type == ERROR) || (currentToken.type == EOS))
+      break;
+  }
+
+  for (int i = 0; i < tokenCounter; i++)
+  {
+    printf("Line:%3d | %-30s | %5Ls\n", tokens[i].line, tokenToStr[tokens[i].type], tokens[i].value);
+  }
 
   return 0;
 }
