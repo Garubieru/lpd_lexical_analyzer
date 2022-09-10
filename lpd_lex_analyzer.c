@@ -5,48 +5,10 @@
 #include <wctype.h>
 #include <wchar.h>
 #include <locale.h>
-
-wchar_t *charToWChar(char *text)
-{
-  const size_t size = strlen(text) + 1;
-  wchar_t *wText = malloc(sizeof(wchar_t) * size);
-  mbstowcs(wText, text, size);
-  return wText;
-}
-
-wchar_t *readFile(char *fileName)
-{
-  FILE *file = fopen(fileName, "r");
-
-  if (fileName == NULL)
-  {
-    fprintf(stderr, "[ERROR] Provide a filename to be compiled.\n");
-    exit(-1);
-  }
-
-  if (file == NULL)
-  {
-    fprintf(stderr, "[ERROR] File %s not found.\n", fileName);
-    exit(-1);
-  }
-
-  fseek(file, 0, SEEK_END);
-  int fileSize = ftell(file);
-  rewind(file);
-
-  char *buffer;
-  buffer = malloc((fileSize) * sizeof(char));
-
-  if (buffer == NULL)
-  {
-    exit(-1);
-  }
-
-  fread(buffer, sizeof(char), fileSize, file);
-  fclose(file);
-
-  return charToWChar(buffer);
-}
+#include "protocols/readfile.h"
+#include "protocols/char-to-wchar.h"
+#include "protocols/characters-checkers.h"
+#include "protocols/symbol-checkers.h"
 
 typedef enum TOKEN_TYPE
 {
@@ -135,7 +97,7 @@ char *reservedIdentifiers[] = {
     "prg",
     "var",
     "begin",
-    "char"
+    "char",
     "int",
     "float",
     "void",
@@ -152,7 +114,7 @@ char *reservedIdentifiers[] = {
     "not",
     "read",
     "write",
-    "end"
+    "end",
     "return"};
 
 char *tokenToStr[] = {
@@ -204,254 +166,6 @@ char *tokenToStr[] = {
     "ERROR",
 };
 
-int isSpace(wchar_t *character)
-{
-  return *character == ' ';
-}
-
-int isTab(wchar_t *character)
-{
-  return *character == '\t';
-}
-
-int isEndOfLine(wchar_t *character)
-{
-  return *character == '\n' || *character == '\r';
-}
-
-int isEndOfFile(wchar_t *character)
-{
-  return *character == EOF || *character == '\x0';
-}
-
-int isSumOp(wchar_t *character)
-{
-  return *character == '+';
-}
-
-int isDivisionOp(wchar_t *character)
-{
-  return *character == '/';
-}
-
-int isMultiplierOp(wchar_t *character)
-{
-  return *character == '*';
-}
-
-int isSubtractionOp(wchar_t *character)
-{
-  return *character == '-';
-}
-
-int isDot(wchar_t *character)
-{
-  return *character == '.';
-}
-
-int isOpenParenthesis(wchar_t *character)
-{
-  return *character == '(';
-}
-
-int isClosedParenthesis(wchar_t *character)
-{
-  return *character == ')';
-}
-
-int isDigit(wchar_t *character)
-{
-  return *character >= '0' && *character <= '9';
-}
-
-int isAlpha(wchar_t *character)
-{
-  return iswalpha(*character);
-}
-
-int isExclamation(wchar_t *character)
-{
-  return *character == '!';
-}
-
-int isUnderline(wchar_t *character)
-{
-  return *character == '_';
-}
-
-int isEqual(wchar_t *character)
-{
-  return *character == '=';
-}
-
-int isSemicolonSymbol(wchar_t *character)
-{
-  return *character == ';';
-}
-
-int isDoubleQuotes(wchar_t *character)
-{
-  return *character == '"';
-}
-
-int isRightArrow(wchar_t *character)
-{
-  return *character == '>';
-}
-
-int isLeftArrow(wchar_t *character)
-{
-  return *character == '<';
-}
-
-int isComma(wchar_t *character)
-{
-  return *character == ',';
-}
-
-int isMinus(wchar_t *character)
-{
-  return *character = '-';
-}
-
-int isSingleQuote(wchar_t *character)
-{
-  return *character == '\'';
-}
-
-int isOpenBracket(wchar_t *character)
-{
-  return *character == '{';
-}
-
-int isCloseBracket(wchar_t *character)
-{
-  return *character == '}';
-}
-
-int isStringEqual(wchar_t *string, wchar_t *stringToCompare)
-{
-  return wcscmp(string, stringToCompare) == 0;
-}
-
-int isINTTypeSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("int"));
-}
-
-int isFLOATTypeSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("float"));
-}
-
-int isCHARSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("char"));
-}
-
-int isVOIDSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("void"));
-}
-
-int isPRGSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("prg"));
-}
-
-int isBEGINSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("begin"));
-}
-
-int isVARSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("var"));
-}
-
-int isSUBROTSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("subrot"));
-}
-
-int isIFSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("if"));
-}
-
-int isELSESymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("else"));
-}
-
-int isFORSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("for"));
-}
-
-int isWHILESymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("while"));
-}
-
-int isTHENSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("then"));
-}
-
-int isREPEATSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("repeat"));
-}
-
-int isUNTILSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("until"));
-}
-
-int isANDSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("and"));
-}
-
-int isORSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("or"));
-}
-
-int isNOTSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("not"));
-}
-
-int isREADSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("read"));
-}
-
-int isWRITESymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("write"));
-}
-
-int isENDSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("end"));
-}
-
-int isRETURNSymbol(wchar_t *word)
-{
-  return isStringEqual(word, charToWChar("return"));
-}
-
-int isSpecialCharacter(wchar_t *character)
-{
-  return (*character == 33) ||
-         (*character >= 35 && *character <= 47) ||
-         (*character >= 58 && *character <= 64) ||
-         (*character >= 91 && *character <= 96) ||
-         (*character >= 123 && *character <= 126);
-}
 
 TOKEN scanner(wchar_t **buffer, int *line)
 {
