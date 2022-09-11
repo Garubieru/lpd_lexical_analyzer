@@ -14,6 +14,8 @@
 Grupo:
   Gabriel da Silva Morishita Garbi - 32048661
   Bruno Seki Schenberg - 32041292
+
+  Comando para buildar: gcc -g lpd_lex_analyzer.c ./utils/*.c -o lpd_lex_analyzer
 */
 
 typedef enum TOKEN_TYPE
