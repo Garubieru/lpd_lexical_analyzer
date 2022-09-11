@@ -60,63 +60,6 @@ typedef enum TOKEN_TYPE
   ERROR,
 } TOKEN_TYPE;
 
-typedef struct TOKEN
-{
-  int line;
-  TOKEN_TYPE type;
-  wchar_t value[200];
-} TOKEN;
-
-typedef enum RESERVED_IDENTIFIERS
-{
-  PRG_ID,
-  VAR_ID,
-  BEGIN_ID,
-  CHAR_ID,
-  INT_ID,
-  FLOAT_ID,
-  VOID_ID,
-  SUBROT_ID,
-  IF_ID,
-  ELSE_ID,
-  FOR_ID,
-  WHILE_ID,
-  THEN_ID,
-  REPEAT_ID,
-  UNTIL_ID,
-  AND_ID,
-  OR_ID,
-  NOT_ID,
-  READ_ID,
-  WRITE_ID,
-  END_ID,
-  RETURN_ID,
-} RESERVED_IDENTIFIERS;
-
-char *reservedIdentifiers[] = {
-    "prg",
-    "var",
-    "begin",
-    "char",
-    "int",
-    "float",
-    "void",
-    "subrot",
-    "if",
-    "else",
-    "for",
-    "while",
-    "then",
-    "repeat",
-    "until",
-    "and",
-    "or",
-    "not",
-    "read",
-    "write",
-    "end",
-    "return"};
-
 char *tokenToStr[] = {
     "IDENTIFIER",
     "ATTRIB_OP",
@@ -166,6 +109,12 @@ char *tokenToStr[] = {
     "ERROR",
 };
 
+typedef struct TOKEN
+{
+  int line;
+  TOKEN_TYPE type;
+  wchar_t value[200];
+} TOKEN;
 
 TOKEN scanner(wchar_t **buffer, int *line)
 {
@@ -465,30 +414,65 @@ TOKEN scanner(wchar_t **buffer, int *line)
   return token;
 }
 
+int isVerboseMode(char *mode, int argc)
+{
+  int hasThirdArg = argc == 3;
+  return hasThirdArg && strcmp(mode, "/v") == 0;
+}
+
+void notifyResult(int isErrorFound, char *fileName, int line)
+{
+
+  if (!isErrorFound)
+  {
+    printf("Succesfully identified all %s tokens. Run verbose mode (/v) to see results.\n", fileName);
+  }
+  else
+  {
+    printf("An error ocurred while trying to identify tokens on %s in line %d. Please, run verbose mode (/v) to see results.\n", fileName, line);
+  }
+}
+
 int main(int argc, char *argv[])
 {
   setlocale(LC_ALL, "");
 
   char *fileName = argv[1];
+  char *mode = argv[2];
   int line = 1;
+
   wchar_t *buffer = readFile(fileName);
   TOKEN *tokens;
   int tokenCounter = 0;
-
   tokens = malloc(sizeof(TOKEN) * 1);
+
+  int isErrorFound = 0;
   while (1)
   {
     TOKEN currentToken = scanner(&buffer, &line);
     tokenCounter++;
     tokens = realloc(tokens, tokenCounter * sizeof(TOKEN));
     tokens[tokenCounter - 1] = currentToken;
-    if ((currentToken.type == ERROR) || (currentToken.type == EOS))
+    int isErrorOrEOS = (currentToken.type == ERROR) || (currentToken.type == EOS);
+    if (isErrorOrEOS)
+    {
+      if (currentToken.type == ERROR)
+      {
+        isErrorFound = 1;
+      }
       break;
+    }
   }
 
-  for (int i = 0; i < tokenCounter; i++)
+  notifyResult(isErrorFound, fileName, line);
+
+  if (isVerboseMode(mode, argc))
   {
-    printf("Line:%3d | %-30s | %5Ls\n", tokens[i].line, tokenToStr[tokens[i].type], tokens[i].value);
+    for (int i = 0; i < tokenCounter; i++)
+    {
+      TOKEN token = tokens[i];
+      printf("Line:%3d | %-30s | %5Ls\n", token.line, tokenToStr[token.type], token.value);
+    }
   }
 
   return 0;
