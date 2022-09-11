@@ -10,6 +10,12 @@
 #include "protocols/characters-checkers.h"
 #include "protocols/symbol-checkers.h"
 
+/* 
+Grupo:
+  Gabriel da Silva Morishita Garbi - 32048661
+  Bruno Seki Schenberg - 32041292
+*/
+
 typedef enum TOKEN_TYPE
 {
   IDENTIFIER,
