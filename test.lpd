@@ -1,8 +1,9 @@
-prg Exemplo_01;
-var
-  int x;
+prg EXEMPLO_03;
+subrot
+int SOMA(int A, int B)
 begin
-  write("Informe um número inteiro: ");
-  read(x);
-  write("O valor informado acrescido de 10 é: ", x + 10);
+ write(SOMA(1,2.44));
+end;
+begin
+ write(SOMA(1,2));
 end.

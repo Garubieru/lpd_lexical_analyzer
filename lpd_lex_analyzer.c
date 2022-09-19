@@ -10,7 +10,7 @@
 #include "protocols/characters-checkers.h"
 #include "protocols/symbol-checkers.h"
 
-/* 
+/*
 Grupo:
   Gabriel da Silva Morishita Garbi - 32048661
   Bruno Seki Schenberg - 32041292
@@ -441,6 +441,35 @@ void notifyResult(int isErrorFound, char *fileName, int line)
   }
 }
 
+TOKEN *tokens;
+int parserErrors = 0;
+
+void parser();
+int id();
+void dcl();
+int tpo();
+void sub();
+void param();
+void bco();
+void cmd();
+void wr();
+void rd();
+void check_if();
+void fr();
+void wh();
+void rpt();
+void atr();
+void f();
+void check_atr_or_f();
+void e();
+void check_exp();
+void exps();
+void tmo();
+void frt();
+int opcat3();
+int opcat2();
+int opcat1();
+
 int main(int argc, char *argv[])
 {
   setlocale(LC_ALL, "");
@@ -450,7 +479,6 @@ int main(int argc, char *argv[])
   int line = 1;
 
   wchar_t *buffer = readFile(fileName);
-  TOKEN *tokens;
   int tokenCounter = 0;
   tokens = malloc(sizeof(TOKEN) * 1);
 
@@ -483,5 +511,425 @@ int main(int argc, char *argv[])
     }
   }
 
-  return 0;
+  parser();
+
+  if (parserErrors > 0)
+  {
+    printf("CAGUEIII ERROR");
+    return 1;
+  }
+
+  return 1;
+}
+
+int check(TOKEN_TYPE expectedTokenType)
+{
+  TOKEN_TYPE currentTokenType = tokens->type;
+  int isExpectedToken = currentTokenType == expectedTokenType;
+  if (isExpectedToken)
+  {
+    printf("value: %ls | line: %d\n", tokens->value, tokens->line);
+    tokens++;
+    return isExpectedToken;
+  }
+  else
+  {
+    parserErrors++;
+    printf("[ERROR] value: %ls | line: %d\n", tokens->value, tokens->line);
+    tokens++;
+    return isExpectedToken;
+  }
+}
+
+int id()
+{
+  return check(IDENTIFIER);
+}
+
+int tpo()
+{
+  if (tokens->type == INTENGER_TYPE_SYMBOL)
+  {
+    return check(INTENGER_TYPE_SYMBOL);
+  }
+  else if (tokens->type == FLOAT_TYPE_SYMBOL)
+  {
+    return check(FLOAT_TYPE_SYMBOL);
+  }
+  else if (tokens->type == CHAR_TYPE_SYMBOL)
+  {
+    return check(CHAR_TYPE_SYMBOL);
+  }
+}
+
+void dcl()
+{
+  check(VAR_SYMBOL);
+  tpo();
+  id();
+  while (tokens->type == COMMA_SYMBOL)
+  {
+    check(COMMA_SYMBOL);
+    id();
+  }
+  check(SEMICOLON_SYMBOL);
+  if (tokens->type == SUBROT_SYMBOL)
+  {
+    sub();
+  }
+}
+
+void param()
+{
+  if (tpo())
+  {
+    id();
+    while (tokens->type == COMMA_SYMBOL)
+    {
+      check(COMMA_SYMBOL);
+      tpo();
+      id();
+    }
+  }
+}
+
+void ftr()
+{
+  if (tokens->type == NOT_OP)
+  {
+    check(NOT_OP);
+    ftr();
+  }
+  else if (tokens->type == PAREN_OPEN_SYMBOL)
+  {
+    check(PAREN_OPEN_SYMBOL);
+    check_exp();
+    check(PAREN_CLOSED_SYMBOL);
+  }
+  else
+  {
+    e();
+  }
+}
+
+int opcat1()
+{
+  switch (tokens->type)
+  {
+  case MULTIPLIER_OP:
+    return check(SUM_OP);
+    break;
+  case DIVISION_OP:
+    return check(SUBTRACTION_OP);
+    break;
+  case AND_OP:
+    return check(OR_OP);
+    break;
+  default:
+    return 0;
+    break;
+  }
+}
+
+void tmo()
+{
+  ftr();
+  while (opcat1())
+  {
+    ftr();
+  }
+}
+
+int opcat2()
+{
+  switch (tokens->type)
+  {
+  case SUM_OP:
+    return check(SUM_OP);
+    break;
+  case SUBTRACTION_OP:
+    return check(SUBTRACTION_OP);
+    break;
+  case OR_OP:
+    return check(OR_OP);
+    break;
+  default:
+    return 0;
+    break;
+  }
+}
+
+void exps()
+{
+  tmo();
+  while (opcat2())
+  {
+    tmo();
+  }
+}
+
+int opcat3()
+{
+  switch (tokens->type)
+  {
+  case GREATHER_OP:
+    return check(GREATHER_OP);
+    break;
+  case GREATER_THAN_OR_EQUAL_OP:
+    return check(GREATHER_OP);
+    break;
+  case LESSER_OP:
+    return check(GREATHER_OP);
+    break;
+  case LESS_THAN_OR_EQUAL_OP:
+    return check(GREATHER_OP);
+    break;
+  case EQUALITY_OP:
+    return check(GREATHER_OP);
+    break;
+  case DIFF_OP:
+    return check(GREATHER_OP);
+    break;
+  default:
+    break;
+  }
+}
+
+void check_exp()
+{
+  exps();
+  while (opcat3())
+  {
+    exps();
+  }
+}
+
+void f()
+{
+  check(IDENTIFIER);
+  check(PAREN_OPEN_SYMBOL);
+  check_exp();
+  check(PAREN_CLOSED_SYMBOL);
+}
+
+void e()
+{
+  if (tokens->type == STRING_SYMBOL)
+  {
+    check(STRING_SYMBOL);
+  }
+  else if (tokens->type == FLOAT)
+  {
+    check(FLOAT);
+  }
+  else if (tokens->type == INTENGER)
+  {
+    check(INTENGER);
+  }
+  else if (tokens->type == CHAR_SYMBOL)
+  {
+    check(CHAR_SYMBOL);
+  }
+  else if (tokens->type == IDENTIFIER)
+  {
+    f();
+  }
+  else if (tokens->type == COMMA_SYMBOL)
+  {
+    check(COMMA_SYMBOL);
+    printf("oiiii");
+
+    check(FLOAT);
+    printf("oiiii");
+  }
+}
+
+void rd()
+{
+  check(READ_SYMBOL);
+  check(PAREN_OPEN_SYMBOL);
+  id();
+  check(PAREN_CLOSED_SYMBOL);
+  check(SEMICOLON_SYMBOL);
+  cmd();
+}
+
+void wr()
+{
+  check(WRITE_SYMBOL);
+  check(PAREN_OPEN_SYMBOL);
+  printf("AAAAAAAAAAAAA");
+
+  e();
+  printf("AAAAAAAAAAAAA");
+  check(PAREN_CLOSED_SYMBOL);
+  check(SEMICOLON_SYMBOL);
+  cmd();
+}
+
+void check_if()
+{
+
+  check(IF_SYMBOL);
+  check(PAREN_OPEN_SYMBOL);
+  check_exp();
+  check(THEN_SYMBOL);
+  cmd();
+  if (tokens->type == ELSE_SYMBOL)
+  {
+    check(ELSE_SYMBOL);
+    cmd();
+  }
+}
+
+void atr()
+{
+  id();
+  check(ATTRIB_OP);
+  check_exp();
+}
+
+void fr()
+{
+  check(FOR_SYMBOL);
+  check(PAREN_OPEN_SYMBOL);
+  atr();
+  check(SEMICOLON_SYMBOL);
+  check_exp();
+  check(SEMICOLON_SYMBOL);
+  atr();
+  check(PAREN_CLOSED_SYMBOL);
+  cmd();
+}
+
+void wh()
+{
+  check(WHILE_SYMBOL);
+  check(PAREN_OPEN_SYMBOL);
+  check_exp();
+  check(PAREN_CLOSED_SYMBOL);
+  cmd();
+}
+
+void rpt()
+{
+  check(REPEAT_SYMPOL);
+  cmd();
+  check(UNTIL_SYMBOL);
+  check(PAREN_OPEN_SYMBOL);
+  check_exp();
+  check(PAREN_OPEN_SYMBOL);
+}
+
+void check_atr_or_f()
+{
+  id();
+  if (tokens->type == ATTRIB_OP)
+  {
+    check(ATTRIB_OP);
+    check_exp();
+  }
+  else if (tokens->type == PAREN_OPEN_SYMBOL)
+  {
+    check(PAREN_OPEN_SYMBOL);
+    check_exp();
+    check(PAREN_CLOSED_SYMBOL);
+  }
+}
+
+void rt()
+{
+}
+
+void cmd()
+{
+  if (tokens->type == WRITE_SYMBOL)
+  {
+    wr();
+  }
+  else if (tokens->type == READ_SYMBOL)
+  {
+    rd();
+  }
+  else if (tokens->type == IF_SYMBOL)
+  {
+    check_if();
+  }
+  else if (tokens->type == FOR_SYMBOL)
+  {
+    fr();
+  }
+  else if (tokens->type == WHILE_SYMBOL)
+  {
+    wh();
+  }
+  else if (tokens->type == REPEAT_SYMPOL)
+  {
+    rpt();
+  }
+  else if (tokens->type == IDENTIFIER)
+  {
+    check_atr_or_f();
+  }
+  else if (tokens->type == BEGIN_SYMBOL)
+  {
+    bco();
+  }
+  else if (tokens->type == RETURN_SYMBOL)
+  {
+    rt();
+  }
+}
+
+void bco()
+{
+  check(BEGIN_SYMBOL);
+  cmd();
+  check(END_SYMBOL);
+}
+
+void sub()
+{
+  printf("aaaaaa");
+  check(SUBROT_SYMBOL);
+  if (tokens->type == VOID_TYPE_SYMBOL)
+  {
+    check(VOID_TYPE_SYMBOL);
+  }
+  else
+  {
+    tpo();
+  }
+  id();
+  check(PAREN_OPEN_SYMBOL);
+  param();
+  check(PAREN_CLOSED_SYMBOL);
+  if (tokens->type == VAR_SYMBOL)
+  {
+    dcl();
+  }
+  else if (tokens->type == SUBROT_SYMBOL)
+  {
+    sub();
+  }
+  bco();
+}
+
+void parser()
+{
+  check(PRG_SYMBOL);
+  id();
+  check(SEMICOLON_SYMBOL);
+
+  if (tokens->type == VAR_SYMBOL)
+  {
+    dcl();
+  }
+  else if (tokens->type == SUBROT_SYMBOL)
+  {
+    sub();
+  }
+
+  bco();
+  check(DOT_SYMBOL);
 }
