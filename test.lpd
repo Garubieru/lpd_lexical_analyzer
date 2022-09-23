@@ -1,9 +1,13 @@
-prg EXEMPLO_03;
+prg Exemplo_02;
+var
+  int c;
+  float f, a, b;
 subrot
-int SOMA(int A, int B)
+  void SLA(int aaa);
 begin
- write(SOMA(1,2.44));
-end;
-begin
- write(SOMA(1,2));
+  write("Informe a temperatura em °C: ");
+  read(c);
+  f <- 1.8 * C - 32;
+  write("O correspondente em Fahrenheit é: ", f);
+  sla(oi);
 end.

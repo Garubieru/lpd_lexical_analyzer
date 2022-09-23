@@ -507,9 +507,11 @@ int main(int argc, char *argv[])
     for (int i = 0; i < tokenCounter; i++)
     {
       TOKEN token = tokens[i];
-      printf("Line:%3d | %-30s | %5Ls\n", token.line, tokenToStr[token.type], token.value);
+      printf("Line:%3d | %-30s | %5ls\n", token.line, tokenToStr[token.type], token.value);
     }
   }
+
+  if (isErrorFound) return 1;
 
   parser();
 
@@ -562,17 +564,28 @@ int tpo()
   }
 }
 
+int isTypeSymbol() 
+{
+  return tokens->type == INTENGER_TYPE_SYMBOL 
+  || tokens->type == FLOAT_TYPE_SYMBOL 
+  || tokens->type == CHAR_TYPE_SYMBOL;
+}
+
 void dcl()
 {
   check(VAR_SYMBOL);
-  tpo();
-  id();
-  while (tokens->type == COMMA_SYMBOL)
+  while (isTypeSymbol()) 
   {
-    check(COMMA_SYMBOL);
+    tpo();
     id();
+    while (tokens->type == COMMA_SYMBOL)
+    {
+      check(COMMA_SYMBOL);
+      id();
+    }
+    check(SEMICOLON_SYMBOL);
   }
-  check(SEMICOLON_SYMBOL);
+
   if (tokens->type == SUBROT_SYMBOL)
   {
     sub();
@@ -617,7 +630,7 @@ int opcat1()
   switch (tokens->type)
   {
   case MULTIPLIER_OP:
-    return check(SUM_OP);
+    return check(MULTIPLIER_OP);
     break;
   case DIVISION_OP:
     return check(SUBTRACTION_OP);
@@ -676,21 +689,22 @@ int opcat3()
     return check(GREATHER_OP);
     break;
   case GREATER_THAN_OR_EQUAL_OP:
-    return check(GREATHER_OP);
+    return check(GREATER_THAN_OR_EQUAL_OP);
     break;
   case LESSER_OP:
-    return check(GREATHER_OP);
+    return check(LESSER_OP);
     break;
   case LESS_THAN_OR_EQUAL_OP:
-    return check(GREATHER_OP);
+    return check(LESS_THAN_OR_EQUAL_OP);
     break;
   case EQUALITY_OP:
-    return check(GREATHER_OP);
+    return check(EQUALITY_OP);
     break;
   case DIFF_OP:
-    return check(GREATHER_OP);
+    return check(DIFF_OP);
     break;
   default:
+    return 0;
     break;
   }
 }
@@ -732,15 +746,12 @@ void e()
   }
   else if (tokens->type == IDENTIFIER)
   {
-    f();
+    check_atr_or_f();
   }
-  else if (tokens->type == COMMA_SYMBOL)
+  while (tokens->type == COMMA_SYMBOL)
   {
     check(COMMA_SYMBOL);
-    printf("oiiii");
-
-    check(FLOAT);
-    printf("oiiii");
+    e();
   }
 }
 
@@ -751,20 +762,15 @@ void rd()
   id();
   check(PAREN_CLOSED_SYMBOL);
   check(SEMICOLON_SYMBOL);
-  cmd();
 }
 
 void wr()
 {
   check(WRITE_SYMBOL);
   check(PAREN_OPEN_SYMBOL);
-  printf("AAAAAAAAAAAAA");
-
   e();
-  printf("AAAAAAAAAAAAA");
   check(PAREN_CLOSED_SYMBOL);
   check(SEMICOLON_SYMBOL);
-  cmd();
 }
 
 void check_if()
@@ -799,7 +805,6 @@ void fr()
   check(SEMICOLON_SYMBOL);
   atr();
   check(PAREN_CLOSED_SYMBOL);
-  cmd();
 }
 
 void wh()
@@ -808,7 +813,6 @@ void wh()
   check(PAREN_OPEN_SYMBOL);
   check_exp();
   check(PAREN_CLOSED_SYMBOL);
-  cmd();
 }
 
 void rpt()
@@ -828,22 +832,31 @@ void check_atr_or_f()
   {
     check(ATTRIB_OP);
     check_exp();
+    check(SEMICOLON_SYMBOL);
   }
   else if (tokens->type == PAREN_OPEN_SYMBOL)
   {
     check(PAREN_OPEN_SYMBOL);
     check_exp();
     check(PAREN_CLOSED_SYMBOL);
+    check(SEMICOLON_SYMBOL);
+    printf("oiii CABO A FUnc");
   }
-}
-
-void rt()
-{
 }
 
 void cmd()
 {
-  if (tokens->type == WRITE_SYMBOL)
+  printf("manooo\n");
+
+  while (tokens->type == WRITE_SYMBOL ||
+        tokens->type == READ_SYMBOL || 
+        tokens->type == IF_SYMBOL || 
+
+        tokens->type == FOR_SYMBOL || 
+        tokens->type == WHILE_SYMBOL || 
+        tokens->type == REPEAT_SYMPOL ||
+        tokens->type == IDENTIFIER) {
+    if (tokens->type == WRITE_SYMBOL)
   {
     wr();
   }
@@ -871,26 +884,22 @@ void cmd()
   {
     check_atr_or_f();
   }
-  else if (tokens->type == BEGIN_SYMBOL)
-  {
-    bco();
-  }
-  else if (tokens->type == RETURN_SYMBOL)
-  {
-    rt();
-  }
+
+}
+  printf(" qqqq\n");
 }
 
 void bco()
 {
   check(BEGIN_SYMBOL);
   cmd();
+  printf("AQUI FOI DE BASE\n");
   check(END_SYMBOL);
+  printf("AQUI FOI DE BASE 2\n");
 }
 
 void sub()
 {
-  printf("aaaaaa");
   check(SUBROT_SYMBOL);
   if (tokens->type == VOID_TYPE_SYMBOL)
   {
@@ -904,6 +913,7 @@ void sub()
   check(PAREN_OPEN_SYMBOL);
   param();
   check(PAREN_CLOSED_SYMBOL);
+  check(SEMICOLON_SYMBOL);
   if (tokens->type == VAR_SYMBOL)
   {
     dcl();
@@ -911,8 +921,9 @@ void sub()
   else if (tokens->type == SUBROT_SYMBOL)
   {
     sub();
+  } else if (tokens->type == BEGIN_SYMBOL) {
+    bco(); 
   }
-  bco();
 }
 
 void parser()
@@ -929,7 +940,8 @@ void parser()
   {
     sub();
   }
-
   bco();
+  printf("slaaa OIIII");
+
   check(DOT_SYMBOL);
 }
