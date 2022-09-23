@@ -1,13 +1,17 @@
-prg Exemplo_02;
+prg Exemplo_05;
+{Este programa calcula a raiz quadrada de um número}
 var
-  int c;
-  float f, a, b;
-subrot
-  void SLA(int aaa);
+ float a,b,x,erro;
 begin
-  write("Informe a temperatura em °C: ");
-  read(c);
-  f <- 1.8 * C - 32;
-  write("O correspondente em Fahrenheit é: ", f);
-  sla(oi);
+ x <- 1.5;
+ erro <- 0.05;
+ a <- 1;
+ read(b);
+ while ( (b-a) > erro )
+ x <- (a+b)/2;
+ if ( x*x < 2 ) then
+ a <- x
+ else
+ b <- x;
+ write(x);
 end.
