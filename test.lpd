@@ -4,7 +4,7 @@ var
  float a,b,x,erro;
 begin
  x <- 1.5;
- erro <- 0.05;
+ erro <- 0.05
  a <- 1;
  read(b);
  while ( (b-a) > erro )

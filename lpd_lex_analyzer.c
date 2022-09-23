@@ -109,20 +109,21 @@ int opcat1();
 
 TOKEN *tokens;
 int parserErrors = 0;
+
 int main(int argc, char *argv[])
 {
   setlocale(LC_ALL, "");
 
   char *fileName = argv[1];
-  char *mode = argv[2];
-  int line = 1;
+  char *verboseMode = argv[2];
 
+  int line = 1;
   wchar_t *buffer = readFile(fileName);
   int tokenCounter = 0;
   tokens = malloc(sizeof(TOKEN));
 
   int isTokenErrorFound = 0;
-  int isVerboseModeSet = isVerboseMode(mode, argc);
+  int isVerboseModeSet = isVerboseMode(verboseMode, argc);
 
   while (1)
   {
@@ -469,21 +470,21 @@ void notifyTokensResult(int isErrorFound, char *fileName, int line)
 {
   if (!isErrorFound)
   {
-    printf("Succesfully identified all %s tokens. Run verbose mode (/v) to see results.\n", fileName);
+    printf("[RESULT] Succesfully identified all %s tokens. Run verbose mode (/v) to see results.\n", fileName);
     return;
   }
-  printf("An error ocurred while trying to identify tokens on %s in line %d. Please, run verbose mode (/v) to see results.\n", fileName, line);
+  printf("[RESULT] An error ocurred while trying to identify tokens on %s in line %d. Please, run verbose mode (/v) to see results.\n", fileName, line);
 }
 
 void notifyParserResult(int parserErrors)
 {
   if (parserErrors > 0)
   {
-    printf("An syntax error ocurred. Run debug mode (/v) to see all results.\n");
+    printf("[RESULT] An syntax error ocurred.\n");
   }
   else
   {
-    printf("Program syntax is correct. Run debug mode (/v) to see all results.\n");
+    printf("[RESULT] Program syntax is correct.\n");
   }
 }
 
@@ -494,13 +495,12 @@ int check(TOKEN_TYPE expectedTokenType)
   int isExpectedToken = currentTokenType == expectedTokenType;
   if (isExpectedToken)
   {
-    printf("[OK] value: %ls | line: %d\n", tokens->value, tokens->line);
     tokens++;
     return isExpectedToken;
   }
 
   parserErrors++;
-  printf("[ERROR] value: %ls | line: %d\n", tokens->value, tokens->line);
+  printf("[ERROR] value: %5ls | line: %3d\n", tokens->value, tokens->line);
   tokens++;
   return isExpectedToken;
 }
