@@ -511,7 +511,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (isErrorFound) return 1;
+  if (isErrorFound)
+    return 1;
 
   parser();
 
@@ -564,17 +565,15 @@ int tpo()
   }
 }
 
-int isTypeSymbol() 
+int isTypeSymbol()
 {
-  return tokens->type == INTENGER_TYPE_SYMBOL 
-  || tokens->type == FLOAT_TYPE_SYMBOL 
-  || tokens->type == CHAR_TYPE_SYMBOL;
+  return tokens->type == INTENGER_TYPE_SYMBOL || tokens->type == FLOAT_TYPE_SYMBOL || tokens->type == CHAR_TYPE_SYMBOL;
 }
 
 void dcl()
 {
   check(VAR_SYMBOL);
-  while (isTypeSymbol()) 
+  while (isTypeSymbol())
   {
     tpo();
     id();
@@ -849,43 +848,42 @@ void cmd()
   printf("manooo\n");
 
   while (tokens->type == WRITE_SYMBOL ||
-        tokens->type == READ_SYMBOL || 
-        tokens->type == IF_SYMBOL || 
-
-        tokens->type == FOR_SYMBOL || 
-        tokens->type == WHILE_SYMBOL || 
-        tokens->type == REPEAT_SYMPOL ||
-        tokens->type == IDENTIFIER) {
+         tokens->type == READ_SYMBOL ||
+         tokens->type == IF_SYMBOL ||
+         tokens->type == FOR_SYMBOL ||
+         tokens->type == WHILE_SYMBOL ||
+         tokens->type == REPEAT_SYMPOL ||
+         tokens->type == IDENTIFIER)
+  {
     if (tokens->type == WRITE_SYMBOL)
-  {
-    wr();
+    {
+      wr();
+    }
+    else if (tokens->type == READ_SYMBOL)
+    {
+      rd();
+    }
+    else if (tokens->type == IF_SYMBOL)
+    {
+      check_if();
+    }
+    else if (tokens->type == FOR_SYMBOL)
+    {
+      fr();
+    }
+    else if (tokens->type == WHILE_SYMBOL)
+    {
+      wh();
+    }
+    else if (tokens->type == REPEAT_SYMPOL)
+    {
+      rpt();
+    }
+    else if (tokens->type == IDENTIFIER)
+    {
+      check_atr_or_f();
+    }
   }
-  else if (tokens->type == READ_SYMBOL)
-  {
-    rd();
-  }
-  else if (tokens->type == IF_SYMBOL)
-  {
-    check_if();
-  }
-  else if (tokens->type == FOR_SYMBOL)
-  {
-    fr();
-  }
-  else if (tokens->type == WHILE_SYMBOL)
-  {
-    wh();
-  }
-  else if (tokens->type == REPEAT_SYMPOL)
-  {
-    rpt();
-  }
-  else if (tokens->type == IDENTIFIER)
-  {
-    check_atr_or_f();
-  }
-
-}
   printf(" qqqq\n");
 }
 
@@ -921,8 +919,10 @@ void sub()
   else if (tokens->type == SUBROT_SYMBOL)
   {
     sub();
-  } else if (tokens->type == BEGIN_SYMBOL) {
-    bco(); 
+  }
+  else if (tokens->type == BEGIN_SYMBOL)
+  {
+    bco();
   }
 }
 
