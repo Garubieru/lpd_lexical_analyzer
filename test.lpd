@@ -1,17 +1,9 @@
-prg Exemplo_05;
-{Este programa calcula a raiz quadrada de um número}
-var
- float a,b,x,erro;
+prg EXEMPLO_03;
+subrot
+int SOMA(int A, int B)
 begin
- x <- 1.5;
- erro <- 0.05
- a <- 1;
- read(b);
- while ( (b-a) > erro )
- x <- (a+b)/2;
- if ( x*x < 2 ) then
- a <- x
- else
- b <- x;
- write(x);
+ return A+B;
+end;
+begin
+ write(SOMA(1,2));
 end.

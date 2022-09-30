@@ -836,6 +836,8 @@ void cmd()
   case IDENTIFIER:
     check_atr_or_f();
     break;
+  case BEGIN_SYMBOL:
+    bco();
   default:
     break;
   }
@@ -855,6 +857,12 @@ void bco()
     cmd();
     check(SEMICOLON_SYMBOL);
   }
+  if (tokens->type == RETURN_SYMBOL) {
+    check(RETURN_SYMBOL);
+    e();
+    check_exp();
+    check(SEMICOLON_SYMBOL);
+  } 
   check(END_SYMBOL);
 }
 

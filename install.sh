@@ -1,0 +1,1 @@
+gcc -g lpd_lex_analyzer.c ./utils/*.c -o lpd_lex_analyzer
