@@ -11,6 +11,9 @@
 #include "protocols/symbol-checkers.h"
 #include "utils/token-type.c"
 
+#define TRUE 1
+#define FALSE 0
+
 /*
 Grupo:
   Gabriel da Silva Morishita Garbi - 32048661
@@ -75,12 +78,15 @@ typedef struct TOKEN
   wchar_t value[200];
 } TOKEN;
 
+void setProgramLocal();
+void setModes(int argc, char *argv[]);
+int isVerboseMode(char *mode);
+int isDebugMode(char *mode);
 TOKEN scanner(wchar_t **buffer, int *line);
-int isVerboseMode(char *mode, int argc);
 void printToken(TOKEN token);
 void notifyTokensResult(int isErrorFound, char *fileName, int line);
 void notifyParserResult(int parserErrors);
-void parser(int isTokenErrorFound);
+void parser();
 void ini();
 int id();
 void dcl();
@@ -91,15 +97,16 @@ void bco();
 void cmd();
 void wr();
 void rd();
-void check_if();
+void IF();
+void rt();
 void fr();
 void wh();
 void rpt();
 void atr();
 void f();
-void check_atr_or_f();
+void AF();
 void e();
-void check_exp();
+void EXP();
 void exps();
 void tmo();
 void frt();
@@ -109,23 +116,23 @@ int opcat1();
 
 TOKEN *tokens;
 int parserErrors = 0;
+int isVerboseModeSet = FALSE;
+int isDebugModeSet = FALSE;
 
 int main(int argc, char *argv[])
 {
-  setlocale(LC_ALL, "");
+  setProgramLocal();
 
   char *fileName = argv[1];
-  char *verboseMode = argv[2];
+  setModes(argc, argv);
 
-  int line = 1;
   wchar_t *buffer = readFile(fileName);
-  int tokenCounter = 0;
   tokens = malloc(sizeof(TOKEN));
+  int line = 1;
+  int tokenCounter = 0;
 
-  int isTokenErrorFound = 0;
-  int isVerboseModeSet = isVerboseMode(verboseMode, argc);
-
-  while (1)
+  int isTokenErrorFound = FALSE;
+  while (TRUE)
   {
     TOKEN currentToken = scanner(&buffer, &line);
     if (isVerboseModeSet)
@@ -133,17 +140,19 @@ int main(int argc, char *argv[])
       printToken(currentToken);
     }
     if (currentToken.type == COMMENTARY)
+    {
       continue;
-
+    }
     tokenCounter++;
     tokens = realloc(tokens, tokenCounter * sizeof(TOKEN));
     tokens[tokenCounter - 1] = currentToken;
+
     int isErrorOrEOS = (currentToken.type == ERROR) || (currentToken.type == EOS);
     if (isErrorOrEOS)
     {
       if (currentToken.type == ERROR)
       {
-        isTokenErrorFound = 1;
+        isTokenErrorFound = TRUE;
       }
       break;
     }
@@ -151,10 +160,47 @@ int main(int argc, char *argv[])
 
   notifyTokensResult(isTokenErrorFound, fileName, line);
 
-  parser(isTokenErrorFound);
-  notifyParserResult(parserErrors);
+  if (!isTokenErrorFound)
+  {
+    parser();
+    notifyParserResult(parserErrors);
+  }
 
   return 1;
+}
+
+void setProgramLocal()
+{
+  setlocale(LC_ALL, "");
+}
+
+void setModes(int argc, char *argv[])
+{
+  int modesStartIndex = 2;
+  for (int index = modesStartIndex; index < argc; index++)
+  {
+    if (isVerboseMode(argv[index]))
+    {
+      isVerboseModeSet = TRUE;
+      continue;
+    }
+
+    if (isDebugMode(argv[index]))
+    {
+      isDebugModeSet = TRUE;
+      continue;
+    }
+  }
+}
+
+int isVerboseMode(char *mode)
+{
+  return strcmp(mode, "/v") == 0;
+}
+
+int isDebugMode(char *mode)
+{
+  return strcmp(mode, "/d") == 0;
 }
 
 TOKEN scanner(wchar_t **buffer, int *line)
@@ -455,12 +501,6 @@ TOKEN scanner(wchar_t **buffer, int *line)
   return token;
 }
 
-int isVerboseMode(char *mode, int argc)
-{
-  int hasThirdArg = argc == 3;
-  return hasThirdArg && strcmp(mode, "/v") == 0;
-}
-
 void printToken(TOKEN token)
 {
   printf("Line:%3d | %-30s | %5ls\n", token.line, tokenToStr[token.type], token.value);
@@ -470,21 +510,31 @@ void notifyTokensResult(int isErrorFound, char *fileName, int line)
 {
   if (!isErrorFound)
   {
-    printf("[RESULT] Succesfully identified all %s tokens. Run verbose mode (/v) to see results.\n", fileName);
-    return;
+    printf("[LEXICAL] Succesfully identified all %s tokens.\n", fileName);
   }
-  printf("[RESULT] An error ocurred while trying to identify tokens on %s in line %d. Please, run verbose mode (/v) to see results.\n", fileName, line);
+  else
+  {
+    printf("[LEXICAL] An error ocurred while trying to identify tokens on %s in line %d.\n", fileName, line);
+  }
+  if (!isVerboseModeSet)
+  {
+    printf("[LEXICAL] Run verbose mode (/v) to see results.\n");
+  }
 }
 
 void notifyParserResult(int parserErrors)
 {
   if (parserErrors > 0)
   {
-    printf("[RESULT] An syntax error ocurred.\n");
+    printf("[SINTAX] An syntax error ocurred.\n");
   }
   else
   {
-    printf("[RESULT] Program syntax is correct.\n");
+    printf("[SINTAX] Program syntax is correct.\n");
+  }
+  if (!isDebugModeSet)
+  {
+    printf("[SINTAX] Run debug mode (/d) to see results.\n");
   }
 }
 
@@ -495,6 +545,10 @@ int check(TOKEN_TYPE expectedTokenType)
   int isExpectedToken = currentTokenType == expectedTokenType;
   if (isExpectedToken)
   {
+    if (isDebugModeSet)
+    {
+      printf("[OK] value: %5ls | line: %3d\n", tokens->value, tokens->line);
+    }
     tokens++;
     return isExpectedToken;
   }
@@ -578,7 +632,7 @@ void ftr()
   else if (tokens->type == PAREN_OPEN_SYMBOL)
   {
     check(PAREN_OPEN_SYMBOL);
-    check_exp();
+    EXP();
     check(PAREN_CLOSED_SYMBOL);
   }
   else
@@ -671,7 +725,7 @@ int opcat3()
   }
 }
 
-void check_exp()
+void EXP()
 {
   exps();
   while (opcat3())
@@ -684,7 +738,7 @@ void f()
 {
   id();
   check(PAREN_OPEN_SYMBOL);
-  check_exp();
+  EXP();
   check(PAREN_CLOSED_SYMBOL);
 }
 
@@ -705,9 +759,10 @@ void e()
     check(CHAR_SYMBOL);
     break;
   case IDENTIFIER:
-    check_atr_or_f();
+    AF();
     break;
   default:
+    tokens++;
     break;
   }
 }
@@ -733,12 +788,12 @@ void wr()
   check(PAREN_CLOSED_SYMBOL);
 }
 
-void check_if()
+void IF()
 {
 
   check(IF_SYMBOL);
   check(PAREN_OPEN_SYMBOL);
-  check_exp();
+  EXP();
   check(PAREN_CLOSED_SYMBOL);
   check(THEN_SYMBOL);
   cmd();
@@ -753,7 +808,7 @@ void atr()
 {
   id();
   check(ATTRIB_OP);
-  check_exp();
+  EXP();
 }
 
 void fr()
@@ -762,7 +817,7 @@ void fr()
   check(PAREN_OPEN_SYMBOL);
   atr();
   check(SEMICOLON_SYMBOL);
-  check_exp();
+  EXP();
   check(SEMICOLON_SYMBOL);
   atr();
   check(PAREN_CLOSED_SYMBOL);
@@ -773,7 +828,7 @@ void wh()
 {
   check(WHILE_SYMBOL);
   check(PAREN_OPEN_SYMBOL);
-  check_exp();
+  EXP();
   check(PAREN_CLOSED_SYMBOL);
   cmd();
 }
@@ -785,27 +840,27 @@ void rpt()
   check(SEMICOLON_SYMBOL);
   check(UNTIL_SYMBOL);
   check(PAREN_OPEN_SYMBOL);
-  check_exp();
+  EXP();
   check(PAREN_OPEN_SYMBOL);
 }
 
-void check_atr_or_f()
+void AF()
 {
   id();
   if (tokens->type == ATTRIB_OP)
   {
     check(ATTRIB_OP);
-    check_exp();
+    EXP();
   }
   else if (tokens->type == PAREN_OPEN_SYMBOL)
   {
     check(PAREN_OPEN_SYMBOL);
-    check_exp();
+    EXP();
 
     while (tokens->type == COMMA_SYMBOL)
     {
       check(COMMA_SYMBOL);
-      check_exp();
+      EXP();
     }
     check(PAREN_CLOSED_SYMBOL);
   }
@@ -822,7 +877,7 @@ void cmd()
     rd();
     break;
   case IF_SYMBOL:
-    check_if();
+    IF();
     break;
   case FOR_SYMBOL:
     fr();
@@ -834,13 +889,20 @@ void cmd()
     rpt();
     break;
   case IDENTIFIER:
-    check_atr_or_f();
+    AF();
     break;
   case BEGIN_SYMBOL:
     bco();
   default:
     break;
   }
+}
+
+void rt()
+{
+  check(RETURN_SYMBOL);
+  EXP();
+  check(SEMICOLON_SYMBOL);
 }
 
 void bco()
@@ -857,12 +919,10 @@ void bco()
     cmd();
     check(SEMICOLON_SYMBOL);
   }
-  if (tokens->type == RETURN_SYMBOL) {
-    check(RETURN_SYMBOL);
-    e();
-    check_exp();
-    check(SEMICOLON_SYMBOL);
-  } 
+  if (tokens->type == RETURN_SYMBOL)
+  {
+    rt();
+  }
   check(END_SYMBOL);
 }
 
@@ -911,9 +971,7 @@ void ini()
   check(DOT_SYMBOL);
 }
 
-void parser(int isTokenErrorFound)
+void parser()
 {
-  if (isTokenErrorFound)
-    return;
   ini();
 }
