@@ -20,6 +20,7 @@ Grupo:
   Bruno Seki Schenberg - 32041292
 
   Comando para buildar: gcc -g lpd_lex_analyzer.c ./utils/*.c -o lpd_lex_analyzer
+  A estratégia de erro adotada foi de Modo pânico ou Desespero.
 */
 
 char *tokenToStr[] = {
@@ -526,15 +527,15 @@ void notifyParserResult(int parserErrors)
 {
   if (parserErrors > 0)
   {
-    printf("[SINTAX] An syntax error ocurred.\n");
+    printf("[SYNTAX] An syntax error ocurred.\n");
   }
   else
   {
-    printf("[SINTAX] Program syntax is correct.\n");
+    printf("[SYNTAX] Program syntax is correct.\n");
   }
   if (!isDebugModeSet)
   {
-    printf("[SINTAX] Run debug mode (/d) to see results.\n");
+    printf("[SYNTAX] Run debug mode (/d) to see results.\n");
   }
 }
 
@@ -547,15 +548,14 @@ int check(TOKEN_TYPE expectedTokenType)
   {
     if (isDebugModeSet)
     {
-      printf("[OK] value: %5ls | line: %3d\n", tokens->value, tokens->line);
+      printf("[SYNTAX - OK] value: %5ls | line: %3d\n", tokens->value, tokens->line);
     }
     tokens++;
     return isExpectedToken;
   }
 
   parserErrors++;
-  printf("[ERROR] value: %5ls | line: %3d\n", tokens->value, tokens->line);
-  tokens++;
+  printf("[SYNTAX - ERROR] value: %5ls | line: %3d | expectedToken: %5s\n", tokens->value, tokens->line, tokenToStr[expectedTokenType]);
   return isExpectedToken;
 }
 

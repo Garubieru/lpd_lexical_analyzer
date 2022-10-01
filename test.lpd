@@ -18,9 +18,8 @@ subrot
  total<-total+i;
  return total;
  end;
-{bloco de comandos principal}
 begin
  write("Entre com a qtde que deseja calcular:");
  read(max);
- write("O resultado é:", SomatorioAteN(max) );
+ write("O resultado é:", SomatorioAteN(max, ) );
 end.
